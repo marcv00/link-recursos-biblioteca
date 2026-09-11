@@ -69,7 +69,7 @@ export default function App() {
 
       <main className="mx-auto w-full max-w-shell flex-1 px-6 py-8 md:px-10 md:py-10">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold tracking-tight text-ulima-ink md:text-3xl">
+          <h1 className="text-2xl font-semibold tracking-tight text-ulima-ink md:text-3xl">
             Recursos de Biblioteca
           </h1>
           <div className="mt-2 h-1 w-14 bg-ulima-orange" />
