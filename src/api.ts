@@ -141,27 +141,27 @@ function setPendingLogs(logs: PendingLog[]) {
 
 function sendLog(titulo: string, enlace: string): boolean {
   if (!APPS_SCRIPT_URL) return false;
-  const body = JSON.stringify({ titulo, enlace });
 
-  // navigator.sendBeacon está diseñado exactamente para esto: registrar un evento
-  // justo antes de que el usuario navegue a otra pestaña/página, sin bloquear la UI
-  // y sin que el navegador cancele la petición. El Content-Type resultante
-  // (text/plain) evita el preflight CORS, por lo que Apps Script lo recibe directo.
-  if (navigator.sendBeacon) {
-    const blob = new Blob([body], { type: 'text/plain;charset=UTF-8' });
-    const sent = navigator.sendBeacon(APPS_SCRIPT_URL, blob);
-    if (sent) return true;
-  }
-
-  // Fallback para navegadores sin sendBeacon: fetch con keepalive.
+  // Usamos fetch en vez de navigator.sendBeacon porque sendBeacon SIEMPRE envía
+  // las cookies de Google del navegador. Si la máquina tiene una sesión de Google
+  // abierta, Google redirige al login antes de ejecutar doPost y el clic se pierde
+  // sin ningún error visible. credentials: 'omit' evita eso.
+  //
+  // - mode: 'no-cors'  -> no necesitamos leer la respuesta, solo que llegue.
+  // - text/plain       -> evita el preflight CORS; Apps Script lo recibe directo.
+  // - keepalive: true  -> la petición sobrevive aunque se abra/navegue a otra pestaña.
   fetch(APPS_SCRIPT_URL, {
     method: 'POST',
+    mode: 'no-cors',
+    credentials: 'omit',
     headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
-    body,
+    body: JSON.stringify({ titulo, enlace }),
     keepalive: true,
   }).catch(() => {
+    // Sin conexión u otro error de red: se guarda y se reintenta después.
     queuePendingLog(titulo, enlace);
   });
+
   return true;
 }
 
